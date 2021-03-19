@@ -8,17 +8,16 @@ import ru.fedorova.exchange.db.entities.Company;
 import java.util.ArrayList;
 import java.util.List;
 
-import static ru.fedorova.exchange.web.ShareholderController.getStockRate;
 import static ru.fedorova.exchange.web.ShareholderController.OK;
+import static ru.fedorova.exchange.web.ShareholderController.getStockRate;
 
 @RestController
 public class ExchangeController {
 
-    @Autowired
-    private CompanyDatabase companies;
-
     public final static String COMPANY_ALREADY_EXISTS
             = "Company with the same ID already exists.\n";
+    @Autowired
+    private CompanyDatabase companies;
 
     @PostMapping("/exchange/add_new_company")
     public String addNewCompany(@RequestParam(value = "id") int id, @RequestParam(value = "name") String name,
@@ -51,9 +50,12 @@ public class ExchangeController {
 
 
     public static class StockInfo {
-        private final String companyName;
-        private final Integer priceForOneShare;
-        private final Integer stockBalance;
+        private String companyName;
+        private Integer priceForOneShare;
+        private Integer stockBalance;
+
+        public StockInfo() {
+        }
 
         public StockInfo(String companyName, Integer priceForOneShare, Integer stockBalance) {
             this.companyName = companyName;

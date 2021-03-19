@@ -100,10 +100,37 @@ public class IntegrationTest {
     @Test
     public void emptyReports() {
         assertThat(restTemplate.getForObject(String.format(reportCompanyUrl, 1), ExchangeController.StockInfo.class)).isNull();
-        assertThat(restTemplate.getForObject(reportStocksUrl,
-                Collections.<StockInfo>emptyList().getClass()))
+        assertThat(restTemplate.getForObject(reportStocksUrl, Collections.<StockInfo>emptyList().getClass()))
                 .isEqualTo(Collections.<StockInfo>emptyList());
-        assertThat(restTemplate.getForObject(String.format(resourcesReportUrl, 1), SharesReport.class)).isNull();
+        assertThat(restTemplate.getForObject(String.format(sharesReportUrl, 1), SharesReport.class)).isNull();
         assertThat(restTemplate.getForObject(String.format(resourcesReportUrl, 1), Integer.class)).isNull();
+    }
+
+    @Test
+    public void validateTransactions() {
+        assertThat(restTemplate.postForObject(
+                String.format(addNewCompanyUrl, 1, "Yandex", 1000), null, String.class)).isEqualTo(OK);
+        assertThat(restTemplate.postForObject(
+                String.format(addNewShareholderUrl, 1, "Ira"), null, String.class)).isEqualTo(OK);
+
+        assertThat(restTemplate.postForObject(String.format(buySharesUrl, 1, 1, 10000), null, String.class))
+                .isEqualTo(COMPANY_NOT_ENOUGH_SHARES);
+        assertThat(restTemplate.postForObject(String.format(addMoneyUrl, 1, 10000000), null, String.class))
+                .isEqualTo(OK);
+        assertThat(restTemplate.postForObject(String.format(buySharesUrl, 1, 1, 10), null, String.class))
+                .isEqualTo(OK);
+
+        assertThat(restTemplate.postForObject(String.format(sellSharesUrl, 1, 1, 2), null, String.class))
+                .isEqualTo(OK);
+
+        StockInfo yandexStock = restTemplate.getForObject(String.format(reportCompanyUrl, 1), StockInfo.class);
+        assertThat(yandexStock.getCompanyName()).isEqualTo("Yandex");
+        assertThat(yandexStock.getStockBalance()).isEqualTo(992);
+
+        SharesReport sharesReport = restTemplate.getForObject(String.format(sharesReportUrl, 1), SharesReport.class);
+        assertThat(sharesReport.getOwnerName()).isEqualTo("Ira");
+        assertThat(sharesReport.getShares().size()).isEqualTo(1);
+        assertThat(sharesReport.getShares().get(0).getCompanyName()).isEqualTo("Yandex");
+        assertThat(sharesReport.getShares().get(0).getQuantity()).isEqualTo(8);
     }
 }

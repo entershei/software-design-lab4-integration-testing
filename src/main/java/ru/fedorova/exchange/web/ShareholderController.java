@@ -163,8 +163,10 @@ public class ShareholderController {
     }
 
     public static class SharesReport {
-        private final String ownerName;
+        private String ownerName;
         private final List<ShareInfo> shares = new ArrayList<>();
+
+        public SharesReport() {}
 
         public SharesReport(String ownerName) {
             this.ownerName = ownerName;
@@ -184,18 +186,20 @@ public class ShareholderController {
     }
 
     public static class ShareInfo {
-        private final String company_name;
-        private final Integer quantity;
-        private final Integer cost;
+        private String companyName;
+        private Integer quantity;
+        private Integer cost;
 
-        public ShareInfo(String company_name, Integer quantity, Integer cost) {
-            this.company_name = company_name;
+        public ShareInfo() {}
+
+        public ShareInfo(String companyName, Integer quantity, Integer cost) {
+            this.companyName = companyName;
             this.quantity = quantity;
             this.cost = cost;
         }
 
-        public String getCompany_name() {
-            return company_name;
+        public String getCompanyName() {
+            return companyName;
         }
 
         public Integer getQuantity() {
