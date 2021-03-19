@@ -22,6 +22,20 @@ public class ShareholderController {
     @Autowired
     private CompanyDatabase companies;
 
+    public final static String OK = "Ok\n";
+    public final static String SHAREHOLDER_ALREADY_EXISTS
+            = "Shareholder with the same ID already exists.\n";
+    public final static String SHAREHOLDER_NOT_EXISTS = "ShareholderId does not exist.\n";
+    public final static String COMPANY_NOT_EXISTS = "CompanyId does not exist\n";
+    public final static String COMPANY_NOT_ENOUGH_SHARES
+            = "Transaction declined.\nCompany does not have enough shares.\n";
+    public final static String SHAREHOLDER_NOT_ENOUGH_MONEY
+            = "Transaction declined.\nUnfortunately, at the moment, shares cost more, than you have.\n";
+    public final static String SHAREHOLDER_DO_NOT_HAVE_SHARES
+            = "Transaction declined.\nUnfortunately, you don't have shares of this company.\n";
+    public final static String SHAREHOLDER_DO_NOT_HAVE_ENOUGH_SHARES
+            = "Transaction declined.\nUnfortunately, you don't have enough shares of this company.\n";
+
     public static Integer getStockRate(Integer companyId) {
         final int MIN_COST = 100;
         final int MAX_COST = 50000;
@@ -29,46 +43,44 @@ public class ShareholderController {
         return (int) ((Math.random() * (MAX_COST - MIN_COST)) + MIN_COST);
     }
 
-    @PostMapping("/shareholder/add_new/")
+    @PostMapping("/shareholder/add_new")
     public String addNewShareholder(@RequestParam(value = "id") int id, @RequestParam(value = "name") String name) {
         if (shareholders.existsById(id)) {
-            return "Shareholder with the same ID already exists.\n";
+            return SHAREHOLDER_ALREADY_EXISTS;
         }
         shareholders.save(new Shareholder(id, name));
-        return "Ok\n";
+        return OK;
     }
 
-    @PostMapping("/shareholder/add_money/")
+    @PostMapping("/shareholder/add_money")
     public String addMoney(@RequestParam(value = "id") int id, @RequestParam(value = "money") int money) {
         if (shareholders.findById(id).isEmpty()) {
-            return "Id does not exist.\n";
+            return SHAREHOLDER_NOT_EXISTS;
         }
         Shareholder shareholder = shareholders.findById(id).get();
         shareholder.addMoney(money);
         shareholders.save(shareholder);
-        return "Ok\n";
+        return OK;
     }
 
-    @PostMapping("/shareholder/buy_shares/")
+    @PostMapping("/shareholder/buy_shares")
     public String buyShares(@RequestParam(value = "shareholderId") int shareholderId,
                             @RequestParam(value = "companyId") int companyId,
                             @RequestParam(value = "quantity") int quantity) {
         if (shareholders.findById(shareholderId).isEmpty()) {
-            return "ShareholderId does not exist.\n";
+            return SHAREHOLDER_NOT_EXISTS;
         }
         if (companies.findById(companyId).isEmpty()) {
-            return "CompanyId does not exist\n";
+            return COMPANY_NOT_EXISTS;
         }
         Company company = companies.findById(companyId).get();
         if (company.getStockBalance() < quantity) {
-            return "Transaction declined.\nCompany does not have enough shares. Actual number of shares is "
-                    + company.getStockBalance().toString() + ".\n";
+            return COMPANY_NOT_ENOUGH_SHARES;
         }
         Integer sharesPrice = getStockRate(companyId) * quantity;
         Shareholder shareholder = shareholders.findById(shareholderId).get();
         if (shareholder.getMoney() < sharesPrice) {
-            return "Transaction declined.\nUnfortunately, at the moment, shares cost "
-                    + sharesPrice.toString() + ", but you have only " + shareholder.getMoney().toString() + ".\n";
+            return SHAREHOLDER_NOT_ENOUGH_MONEY;
         }
 
         shareholder.subtractMoney(sharesPrice);
@@ -85,26 +97,25 @@ public class ShareholderController {
             purchasedShares.save(purchasedShare);
         }
 
-        return "Ok\n";
+        return OK;
     }
 
-    @PostMapping("/shareholder/sell_shares/")
+    @PostMapping("/shareholder/sell_shares")
     public String sellShares(@RequestParam(value = "shareholderId") int shareholderId,
                              @RequestParam(value = "companyId") int companyId,
                              @RequestParam(value = "quantity") int quantity) {
         if (shareholders.findById(shareholderId).isEmpty()) {
-            return "ShareholderId does not exist.\n";
+            return SHAREHOLDER_NOT_EXISTS;
         }
         if (companies.findById(companyId).isEmpty()) {
-            return "CompanyId does not exist\n";
+            return COMPANY_NOT_EXISTS;
         }
         if (purchasedShares.findByOwnerIdAndCompanyId(shareholderId, companyId).isEmpty()) {
-            return "\"Transaction declined.\nUnfortunately, you don't have shares of this company.\n";
+            return SHAREHOLDER_DO_NOT_HAVE_SHARES;
         }
         PurchasedShare purchasedShare = purchasedShares.findByOwnerIdAndCompanyId(shareholderId, companyId).get();
         if (purchasedShare.getQuantity() < quantity) {
-            return "Transaction declined.\nUnfortunately, you don't have enough shares. Actual number of shares is "
-                    + purchasedShare.getQuantity().toString() + ".\n";
+            return SHAREHOLDER_DO_NOT_HAVE_ENOUGH_SHARES;
         }
         purchasedShare.subtractQuantity(quantity);
         purchasedShares.save(purchasedShare);
@@ -118,13 +129,13 @@ public class ShareholderController {
         company.addShares(quantity);
         companies.save(company);
 
-        return "Ok\n";
+        return OK;
     }
 
     @GetMapping("/shareholder/shares_report/{id}")
     public SharesReport getSharesReport(@PathVariable int id) {
         if (shareholders.findById(id).isEmpty()) {
-            return new SharesReport(null);
+            return null;
         }
         SharesReport report = new SharesReport(shareholders.findById(id).get().getName());
 
@@ -141,7 +152,7 @@ public class ShareholderController {
     @GetMapping("/shareholder/resources_report/{id}")
     public Integer getResources(@PathVariable int id) {
         if (shareholders.findById(id).isEmpty()) {
-            return 0;
+            return null;
         }
         Integer sum = shareholders.findById(id).get().getMoney();
         SharesReport sharesReport = getSharesReport(id);

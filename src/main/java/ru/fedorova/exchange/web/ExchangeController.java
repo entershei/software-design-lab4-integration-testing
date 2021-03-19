@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static ru.fedorova.exchange.web.ShareholderController.getStockRate;
+import static ru.fedorova.exchange.web.ShareholderController.OK;
 
 @RestController
 public class ExchangeController {
@@ -16,20 +17,23 @@ public class ExchangeController {
     @Autowired
     private CompanyDatabase companies;
 
-    @PostMapping("/exchange/add_new_company/")
+    public final static String COMPANY_ALREADY_EXISTS
+            = "Company with the same ID already exists.\n";
+
+    @PostMapping("/exchange/add_new_company")
     public String addNewCompany(@RequestParam(value = "id") int id, @RequestParam(value = "name") String name,
                                 @RequestParam(value = "stock_balance") int stockBalance) {
         if (companies.existsById(id)) {
-            return "Company with the save ID already exists.\n";
+            return COMPANY_ALREADY_EXISTS;
         }
         companies.save(new Company(id, name, stockBalance));
-        return "Ok\n";
+        return OK;
     }
 
     @GetMapping("/exchange/report_company/{id}")
     public StockInfo getCompanyReport(@PathVariable int id) {
         if (companies.findById(id).isEmpty()) {
-            return new StockInfo(null, null, null);
+            return null;
         }
         Company company = companies.findById(id).get();
         return new StockInfo(company.getName(), getStockRate(id), company.getStockBalance());
