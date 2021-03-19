@@ -5,8 +5,10 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
-import org.springframework.boot.web.server.LocalServerPort;
+import org.testcontainers.containers.GenericContainer;
+import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
+import org.testcontainers.utility.DockerImageName;
 import ru.fedorova.exchange.web.ExchangeController;
 import ru.fedorova.exchange.web.ExchangeController.StockInfo;
 import ru.fedorova.exchange.web.ShareholderController;
@@ -22,9 +24,9 @@ import static ru.fedorova.exchange.web.ShareholderController.*;
 @Testcontainers
 public class IntegrationTest {
 
-//    @Container
-//    public GenericContainer redis = new GenericContainer(DockerImageName.parse("redis:5.0.3-alpine"))
-//            .withExposedPorts(8080);
+    @Container
+    public GenericContainer container = new GenericContainer(DockerImageName.parse("lab4_integration_testing:1.0-SNAPSHOT"))
+            .withExposedPorts(8080);
 
     @Autowired
     private ExchangeController exchangeController;
@@ -32,8 +34,6 @@ public class IntegrationTest {
     private ShareholderController shareholderController;
     @Autowired
     private TestRestTemplate restTemplate;
-    @LocalServerPort
-    private int port;
 
     private String addNewCompanyUrl = "add_new_company?id=%d&name=%s&stock_balance=%d";
     private String reportCompanyUrl = "report_company/%d";
@@ -48,6 +48,7 @@ public class IntegrationTest {
 
     @BeforeEach
     public void setUp() {
+        int port = container.getFirstMappedPort();
         String urlExchangePrefix = "http://localhost:" + port + "/exchange/";
         addNewCompanyUrl = urlExchangePrefix + addNewCompanyUrl;
         reportCompanyUrl = urlExchangePrefix + reportCompanyUrl;
